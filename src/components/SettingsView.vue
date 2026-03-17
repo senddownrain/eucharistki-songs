@@ -17,13 +17,13 @@
       />
 
       <v-slider
-        :model-value="settingsStore.fontSize"
+        :model-value="settingsStore.fontSizeMultiplier"
         label="Text size"
-        min="12"
-        max="22"
-        step="1"
+        min="0.9"
+        max="1.4"
+        step="0.05"
         thumb-label
-        @update:model-value="settingsStore.setFontSize"
+        @update:model-value="settingsStore.setFontSizeMultiplier"
       />
     </v-card-text>
   </v-card>

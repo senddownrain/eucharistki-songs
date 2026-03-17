@@ -1,30 +1,21 @@
 <template>
   <div>
     <div class="d-flex flex-wrap ga-3 mb-4 align-center">
-      <v-text-field
-        v-model="search"
-        hide-details
-        density="comfortable"
-        prepend-inner-icon="mdi-magnify"
-        label="Search notes"
-        class="flex-grow-1"
-      />
-      <v-select
-        v-model="selectedTags"
-        :items="allTags"
-        label="Filter tags"
-        multiple
-        chips
-        closable-chips
-        hide-details
-        density="comfortable"
-        style="max-width: 320px"
-      />
       <v-btn-toggle v-model="mode" mandatory>
         <v-btn value="cards" icon="mdi-view-grid-outline" />
         <v-btn value="list" icon="mdi-format-list-bulleted" />
       </v-btn-toggle>
       <v-btn color="primary" to="/notes/new" prepend-icon="mdi-plus" :disabled="!authStore.user">New</v-btn>
+      <v-spacer />
+      <v-chip
+        v-if="selectedTags.length"
+        color="primary"
+        variant="tonal"
+        append-icon="mdi-close"
+        @click="selectedTags = []"
+      >
+        Tags: {{ selectedTags.join(', ') }}
+      </v-chip>
     </div>
 
     <v-alert v-if="!authStore.user" type="info" variant="tonal" class="mb-4">
@@ -46,7 +37,7 @@
             <v-icon v-if="note.pinned" icon="mdi-pin" size="18" color="primary" />
           </v-card-title>
           <v-card-text>
-            <div class="text-truncate-3">{{ note.text }}</div>
+            <div class="text-truncate-3">{{ extractText(note.text) }}</div>
             <div class="mt-3 d-flex flex-wrap ga-1">
               <v-chip v-for="tag in note.tags || []" :key="tag" size="small" variant="tonal">#{{ tag }}</v-chip>
             </div>
@@ -67,7 +58,7 @@
           <v-icon :icon="note.pinned ? 'mdi-pin' : 'mdi-note-text-outline'" />
         </template>
         <v-list-item-title>{{ note.title }}</v-list-item-title>
-        <v-list-item-subtitle class="text-truncate-2">{{ note.text }}</v-list-item-subtitle>
+        <v-list-item-subtitle class="text-truncate-2">{{ extractText(note.text) }}</v-list-item-subtitle>
         <template #append>
           <div class="d-flex flex-wrap ga-1 justify-end">
             <v-chip v-for="tag in note.tags || []" :key="tag" size="x-small" variant="outlined">#{{ tag }}</v-chip>
@@ -82,26 +73,32 @@
 import { computed, ref } from 'vue';
 import { useNotes } from '../composables/useNotes';
 import { useAuthStore } from '../stores/auth';
+import { useFilters } from '../composables/useFilters';
 
 const authStore = useAuthStore();
-const { notes, loading, allTags } = useNotes();
+const { notes, loading } = useNotes();
+const { search, selectedTags } = useFilters();
 
-const search = ref('');
-const selectedTags = ref([]);
 const mode = ref('cards');
 
+const extractText = (html) => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
 const filteredNotes = computed(() => {
-  const query = search.value.trim().toLowerCase();
+  const searchLower = search.value.toLowerCase().trim();
+
   return notes.value.filter((note) => {
-    if (note.hidden) return false;
-    const inSearch =
-      !query ||
-      note.title.toLowerCase().includes(query) ||
-      note.text.toLowerCase().includes(query);
-    const inTags =
+    const tagMatch =
       selectedTags.value.length === 0 ||
-      selectedTags.value.every((tag) => (note.tags || []).includes(tag));
-    return inSearch && inTags;
+      (note.tags && selectedTags.value.every((tag) => note.tags.includes(tag)));
+
+    if (!tagMatch) return false;
+
+    if (searchLower) {
+      const fullText = `${note.title || ''} ${extractText(note.text)}`.toLowerCase();
+      return fullText.includes(searchLower);
+    }
+
+    return true;
   });
 });
 </script>

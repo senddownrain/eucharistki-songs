@@ -74,7 +74,6 @@ export function useNotes() {
       text: payload.text,
       tags: payload.tags || [],
       pinned: Boolean(payload.pinned),
-      hidden: Boolean(payload.hidden),
       ownerId: authStore.user.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -89,7 +88,6 @@ export function useNotes() {
       text: payload.text,
       tags: payload.tags || [],
       pinned: Boolean(payload.pinned),
-      hidden: Boolean(payload.hidden),
       updatedAt: serverTimestamp(),
     });
   };

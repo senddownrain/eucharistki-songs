@@ -6,7 +6,7 @@ export const useSettingsStore = defineStore('settings', {
   state: () => ({
     theme: 'light',
     fontFamily: 'Inter, system-ui, sans-serif',
-    fontSize: 16,
+    fontSizeMultiplier: 1,
   }),
   actions: {
     init() {
@@ -15,12 +15,16 @@ export const useSettingsStore = defineStore('settings', {
       const parsed = JSON.parse(raw);
       this.theme = parsed.theme || this.theme;
       this.fontFamily = parsed.fontFamily || this.fontFamily;
-      this.fontSize = parsed.fontSize || this.fontSize;
+      this.fontSizeMultiplier = parsed.fontSizeMultiplier || parsed.fontSize / 16 || this.fontSizeMultiplier;
     },
     save() {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ theme: this.theme, fontFamily: this.fontFamily, fontSize: this.fontSize })
+        JSON.stringify({
+          theme: this.theme,
+          fontFamily: this.fontFamily,
+          fontSizeMultiplier: this.fontSizeMultiplier,
+        })
       );
     },
     setTheme(theme) {
@@ -31,8 +35,8 @@ export const useSettingsStore = defineStore('settings', {
       this.fontFamily = fontFamily;
       this.save();
     },
-    setFontSize(fontSize) {
-      this.fontSize = fontSize;
+    setFontSizeMultiplier(fontSizeMultiplier) {
+      this.fontSizeMultiplier = Number(fontSizeMultiplier);
       this.save();
     },
   },

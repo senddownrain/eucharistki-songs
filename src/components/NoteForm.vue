@@ -11,14 +11,10 @@
             :rules="[(v) => !!v || 'Title is required']"
             required
           />
-          <v-textarea
-            v-model="form.text"
-            label="Text"
-            :rules="[(v) => !!v || 'Text is required']"
-            rows="8"
-            auto-grow
-            required
-          />
+
+          <div class="text-subtitle-2 mb-2">Text</div>
+          <RichTextEditor v-model="form.text" class="mb-4" />
+
           <v-combobox
             v-model="form.tags"
             label="Tags"
@@ -29,10 +25,7 @@
             hint="Press Enter to add tag"
             persistent-hint
           />
-          <div class="d-flex ga-6">
-            <v-switch v-model="form.pinned" label="Pinned" />
-            <v-switch v-model="form.hidden" label="Hidden" />
-          </div>
+          <v-switch v-model="form.pinned" label="Pinned" />
 
           <v-alert v-if="error" type="error" variant="tonal" class="mb-4">{{ error }}</v-alert>
 
@@ -49,6 +42,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useNotes } from '../composables/useNotes';
+import RichTextEditor from './RichTextEditor.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -63,7 +57,6 @@ const form = ref({
   text: '',
   tags: [],
   pinned: false,
-  hidden: false,
 });
 
 const load = async () => {
@@ -78,13 +71,19 @@ const load = async () => {
     text: note.text,
     tags: note.tags || [],
     pinned: Boolean(note.pinned),
-    hidden: Boolean(note.hidden),
   };
 };
+
+const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, '').trim();
 
 const handleSubmit = async () => {
   const { valid } = await formRef.value.validate();
   if (!valid) return;
+  if (!stripHtml(form.value.text)) {
+    error.value = 'Text is required';
+    return;
+  }
+
   saving.value = true;
   error.value = '';
 
