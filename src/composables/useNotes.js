@@ -102,7 +102,11 @@ export function useNotes() {
   const getNoteById = async (id) => {
     const snapshot = await getDoc(doc(db, 'notes', id));
     if (!snapshot.exists()) return null;
-    return { id: snapshot.id, ...snapshot.data() };
+
+    const note = { id: snapshot.id, ...snapshot.data() };
+    if (!authStore.user || note.ownerId !== authStore.user.uid) return null;
+
+    return note;
   };
 
   return { notes, loading, error, allTags, createNote, editNote, removeNote, getNoteById };

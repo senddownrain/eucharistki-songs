@@ -8,13 +8,27 @@ export const useAuthStore = defineStore('auth', {
     ready: false,
     loading: false,
     error: '',
+    _readyPromise: null,
   }),
   actions: {
     init() {
-      onAuthStateChanged(auth, (user) => {
-        this.user = user;
-        this.ready = true;
+      if (this._readyPromise) return this._readyPromise;
+
+      this._readyPromise = new Promise((resolve) => {
+        onAuthStateChanged(auth, (user) => {
+          this.user = user;
+          if (!this.ready) {
+            this.ready = true;
+            resolve();
+          }
+        });
       });
+
+      return this._readyPromise;
+    },
+    async waitUntilReady() {
+      if (this.ready) return;
+      await this.init();
     },
     async login(email, password) {
       this.loading = true;
